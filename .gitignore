@@ -11,3 +11,4 @@ vs_studio_settings.json
 # Project stuff
 staticfiles/
 migrations/
+db.sqlite3
