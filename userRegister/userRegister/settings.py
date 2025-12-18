@@ -82,13 +82,23 @@ ASGI_APPLICATION = 'userRegister.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': os.getenv('PG_ENGINE', 'django.db.backends.postgresql'),
+        'NAME': os.getenv('PG_NAME', 'db'),
+        'USER': os.getenv('PG_USER', 'postgres'),
+        'PASSWORD': os.getenv('PG_PASSWORD', 'postgres'),
+        'HOST': os.getenv('PG_HOST', 'localhost'),
+        'PORT': os.getenv('PG_PORT', '5432'),  
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

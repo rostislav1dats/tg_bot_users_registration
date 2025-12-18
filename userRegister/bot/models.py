@@ -1,8 +1,8 @@
 from django.db import models
 
 class TelegramUser(models.Model):
-    telegram_user_id = models.CharField(max_length=255, unique=True, db_index=True)
-    username = models.CharField(max_length=255, blank=True, null=True)
+    telegram_user_id = models.BigIntegerField(unique=True, db_index=True)
+    username = models.CharField(max_length=255, blank=True, null=True, db_index=True)
     first_name = models.CharField(max_length=255, blank=True, null=True)
     last_name = models.CharField(max_length=255, blank=True, null=True)
     language_code = models.CharField(max_length=10, blank=True, null=True)
@@ -21,7 +21,7 @@ class Chat(models.Model):
         ('channel', 'Channel'),
     ]
 
-    chat_id = models.CharField(max_length=255, unique=True, db_index=True)
+    chat_id = models.BigIntegerField(unique=True, db_index=True)
     type = models.CharField(max_length=20, choices=CHAT_TYPES)
     is_active = models.BooleanField(default=True)
     bot_left_at = models.DateTimeField(null=True, blank=True)
