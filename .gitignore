@@ -1,0 +1,13 @@
+# Python stuff
+__pycache__/
+tgvenv/
+.env
+
+# Idea stuff
+.pylintrc/
+.vscode/
+vs_studio_settings.json
+
+# Project stuff
+staticfiles/
+migrations/
