@@ -15,12 +15,12 @@ async def get_user_profile(telegram_user_id: id):
 
 def format_profile_message(user, memberships):
     output = [
-        '*Your profile:* \n',
+        'Your profile:\n',
         f'ID: {user.telegram_user_id};',
         f'Username: @{user.username or '-'};' if user.username else 'Username: ---;',
         f'Name: {user.first_name or '-'} {user.last_name or ''};'.strip(),
         f'Language: {user.language_code or '-'}. \n',
-        '*Chats:*'
+        'Chats:\n'
     ]
 
     if not memberships:

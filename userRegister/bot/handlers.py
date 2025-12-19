@@ -4,11 +4,15 @@ from aiogram.filters import Command
 
 from .services.start import handle_start_private_chat
 from .services.me import get_user_profile, format_profile_message
+from .services.whereami import get_chat_info, format_chat_message
 
 router = Router()
 
 @router.message(Command('start'))
 async def start_handler(message: Message):
+    '''
+    Save users and chats
+    '''
     from_user = message.from_user
     chat_data = message.chat
     # If chat is private
@@ -32,6 +36,9 @@ async def help_handler(message: Message):
 
 @router.message(Command('me'))
 async def me_handler(message: Message):
+    '''
+    Get info about user and subscribed chats
+    '''
     result = await get_user_profile(message.from_user.id)
 
     if result is None:
@@ -40,4 +47,21 @@ async def me_handler(message: Message):
     
     user, membership = result
     text = format_profile_message(user, membership)
-    await message.answer(text, parse_mode='Markdown')
+    await message.answer(text, parse_mode=None)
+
+@router.message(Command('whereami'))
+async def whereami_handler(message: Message):
+    '''
+    Get info about Chat and included users
+    '''
+    chat_data = message.chat
+    result = await get_chat_info(chat_data=chat_data)
+
+    if result is None:
+        await message.answer('Chat not registered. Write /start')
+        return
+    
+    chat, memberships = result
+    text = format_chat_message(chat=chat, memberships=memberships)
+    await message.answer(text, parse_mode=None)
+
