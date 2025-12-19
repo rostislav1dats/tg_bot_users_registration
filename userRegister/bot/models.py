@@ -2,7 +2,7 @@ from django.db import models
 
 class TelegramUser(models.Model):
     telegram_user_id = models.BigIntegerField(unique=True, db_index=True)
-    username = models.CharField(max_length=255, blank=True, null=True, db_index=True)
+    username = models.CharField(max_length=255, blank=True, null=True)
     first_name = models.CharField(max_length=255, blank=True, null=True)
     last_name = models.CharField(max_length=255, blank=True, null=True)
     language_code = models.CharField(max_length=10, blank=True, null=True)

@@ -2,6 +2,7 @@
 __pycache__/
 tgvenv/
 .env
+.pytest_cache/
 
 # Idea stuff
 .pylintrc/

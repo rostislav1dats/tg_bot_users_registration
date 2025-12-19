@@ -1,7 +1,7 @@
 import asyncio
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from bot.services import set_webhook
+from bot.services.webhook import set_webhook
 
 class Command(BaseCommand):
     help = 'Set telegram webhook'
