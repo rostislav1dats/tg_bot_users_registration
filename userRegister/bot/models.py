@@ -35,8 +35,8 @@ class Chat(models.Model):
         return f'Private chat ({self.chat_id})'
     
 class Membership(models.Model):
-    user = models.ForeignKey(TelegramUser, on_delete=models.CASCADE)
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
+    user = models.ForeignKey(TelegramUser, on_delete=models.CASCADE, related_name='membership')
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='membership')
     is_active = models.BooleanField(default=True)
     joined_at = models.DateTimeField(auto_now_add=True)
     left_at = models.DateTimeField(null=True, blank=True)

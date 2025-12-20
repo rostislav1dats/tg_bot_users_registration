@@ -2,19 +2,16 @@ from asgiref.sync import sync_to_async
 from bot.models import Chat, Membership
 
 async def get_chat_info(chat_data):
-    chat, _ = await sync_to_async(Chat.objects.get_or_create)(
-        chat_id=chat_data.id,
-        defaults={
-            "type": getattr(chat_data, "type", "—"),
-            "title": getattr(chat_data, "title", "—")
-        }
-    )
+    chat = await Chat.objects.aget(chat_id=chat_data.id)
 
     membership = await sync_to_async(list)(
         Membership.objects.select_related('user').filter(chat=chat, is_active=True)
     )
 
-    return chat, membership
+    return {
+        'chat': chat,
+        'membership': membership,
+    }
     
 def format_chat_message(chat, memberships):
     output = [

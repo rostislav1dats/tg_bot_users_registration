@@ -2,13 +2,13 @@ from unittest.mock import AsyncMock
 from datetime import datetime
 from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
-from aiogram.types import Chat, User, Message
+from aiogram.types import Message
 import pytest
 
 @pytest.fixture
 def bot():
     bot = Bot(
-        token="123456:TESTTOKEN",
+        token='123456:TESTTOKEN',
         default=DefaultBotProperties(parse_mode='Markdown')
     )
 
@@ -19,37 +19,37 @@ def bot():
 def message_factory(bot):
     def factory(
         *,
-        text="/me",
+        text='/me',
         from_user_id=1,
-        username="testuser",
-        first_name="Test",
+        username='testuser',
+        first_name='Test',
         last_name=None,
         chat_id=100,
-        chat_type="private",
+        chat_type='private',
         chat_title=None,
     ):
         raw_message = {
-            "message_id": 1,
-            "date": int(datetime.now().timestamp()),
-            "chat": {
-                "id": chat_id,
-                "type": chat_type,
-                "title": chat_title,
+            'message_id': 1,
+            'date': int(datetime.now().timestamp()),
+            'chat': {
+                'id': chat_id,
+                'type': chat_type,
+                'title': chat_title,
             },
-            "from": {
-                "id": from_user_id,
-                "is_bot": False,
-                "first_name": first_name,
-                "last_name": last_name,
-                "username": username,
-                "language_code": "en",
+            'from': {
+                'id': from_user_id,
+                'is_bot': False,
+                'first_name': first_name,
+                'last_name': last_name,
+                'username': username,
+                'language_code': 'en',
             },
-            "text": text,
+            'text': text,
         }
 
         message = Message.model_validate(raw_message)
-        message.__dict__answer = AsyncMock()
-        message.__dict__reply = AsyncMock()
+        message.__dict__['answer'] = AsyncMock()
+        message.__dict__['reply'] = AsyncMock()
 
         return message
 

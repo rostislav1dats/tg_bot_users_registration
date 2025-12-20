@@ -3,7 +3,7 @@ from bot.models import TelegramUser, Membership
 
 async def get_user_profile(telegram_user_id: id):
     try:
-        user = await sync_to_async(TelegramUser.objects.get)(telegram_user_id=telegram_user_id)
+        user = await TelegramUser.objects.aget(telegram_user_id=telegram_user_id)
     except TelegramUser.DoesNotExist:
         return None
 
@@ -11,7 +11,10 @@ async def get_user_profile(telegram_user_id: id):
         Membership.objects.select_related('chat').filter(user=user, is_active=True)
     )
 
-    return user, membership
+    return {
+        'user': user,
+        'membership': membership,
+    }
 
 def format_profile_message(user, memberships):
     output = [

@@ -1,11 +1,10 @@
 from django.utils import timezone
-from asgiref.sync import sync_to_async
 from bot.models import TelegramUser, Chat, Membership
 from .normilize import normalize
 
-async def handle_start_private_chat(from_user, chat_data):
+async def handle_start_chat(from_user, chat_data):
     # Create or update user
-    user, _ = await sync_to_async(TelegramUser.objects.update_or_create)(
+    user, _ = await TelegramUser.objects.aupdate_or_create(
         telegram_user_id = from_user.id,
         defaults = {
             'username': normalize(from_user.username),
@@ -17,7 +16,7 @@ async def handle_start_private_chat(from_user, chat_data):
     )
 
     # Create or update private chat
-    chat, _ = await sync_to_async(Chat.objects.update_or_create)(
+    chat, _ = await Chat.objects.aupdate_or_create(
         chat_id = chat_data.id,
         defaults = {
             'type': chat_data.type,
@@ -28,7 +27,7 @@ async def handle_start_private_chat(from_user, chat_data):
     )
 
     # User <-> Chat connection (Membership)
-    membership, created = await sync_to_async(Membership.objects.get_or_create)(
+    membership, created = await Membership.objects.aupdate_or_create(
         user = user,
         chat = chat,
         defaults = {
@@ -41,6 +40,11 @@ async def handle_start_private_chat(from_user, chat_data):
     if not created and not membership.is_active:
         membership.is_active = True
         membership.left_at = None
-        await sync_to_async(membership.save)()
+        await membership.asave()
 
-    return user, chat, membership
+    # return user, chat, membership
+    return {
+        'user': user,
+        'chat': chat,
+        'membership': membership,
+    }
