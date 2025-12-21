@@ -19,8 +19,6 @@ async def telegram_webhook(request):
         request.headers.get("X-Telegram-Bot-Api-Secret-Token") or
         request.META.get("HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN")
     )
-    print("HEADER SECRET:", secret)
-    print("BODY:", request.body)
 
     if request.method != "POST":
         return JsonResponse({"ok": True})

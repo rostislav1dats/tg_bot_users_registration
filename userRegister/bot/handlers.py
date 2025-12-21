@@ -1,6 +1,6 @@
-from aiogram import Router
+from aiogram import Router, types, F
 from aiogram.types import Message
-from aiogram.filters import Command, CommandObject
+from aiogram.filters import Command, CommandObject, ChatMemberUpdatedFilter, KICKED, LEFT
 
 from asgiref.sync import sync_to_async
 
@@ -9,7 +9,7 @@ from .services.me import get_user_profile, format_profile_message
 from .services.whereami import get_chat_info, format_chat_message
 from .services.stats import get_stats_private_chat, format_stats_message
 from .services.seen import format_seen
-from .models import TelegramUser, Chat
+from .models import Membership, TelegramUser, Chat
 
 
 router = Router()
@@ -86,6 +86,9 @@ async def stats_handler(message: Message):
 
 @router.message(Command('seen'))
 async def seen_handler(message: Message, command: CommandObject):
+    if message.chat.type == 'private':
+        await message.answer('I can handle this command only in group chats')
+        return
     if not command.args:
         await message.answer('ERROR! input: `/seen @username` or `/seen 12345`')
         return
@@ -103,6 +106,46 @@ async def seen_handler(message: Message, command: CommandObject):
         return None, None
     
     # Get all chats asocciated with user
-    chats_queryset = Chat.objects.filter(membership__user=user)
+    chats_queryset = Chat.objects.filter(
+        membership__user=user,
+        is_active=True,
+        membership__is_active=True
+        )
     text = await sync_to_async(format_seen)(user=user, chats_queryset=chats_queryset)
     await message.answer(text=text, parse_mode=None)
+
+@router.my_chat_member(ChatMemberUpdatedFilter(member_status_changed=KICKED | LEFT), F.chat.type == 'private')
+async def user_blocked_bot(event: types.ChatMemberUpdated):
+    '''
+    User delete or block Bot
+    '''
+    user_id = event.from_user.id
+    # Update data in DB
+    await Membership.objects.filter(user__telegram_user_id=user_id).aupdate(is_active=False)
+    print(f'User {user_id} blocked bot')
+
+@router.my_chat_member(ChatMemberUpdatedFilter(member_status_changed=KICKED | LEFT), F.chat.type.in_({'group', 'supergroup'}))
+async def bot_removed_from_chat(event: types.ChatMemberUpdated):
+    '''
+    Set inactive chats where bot was kicked
+    '''
+    chat_id = event.chat.id
+    # mark chat as inactive
+    await Chat.objects.filter(chat_id=chat_id).aupdate(is_active=False)
+    # mark all associations with this chat as inactive
+    await Membership.objects.filter(chat__chat_id=chat_id).aupdate(is_active=False)
+    print(f'Bot was deleted from chat {chat_id} chat is deactivated')
+
+@router.chat_member(ChatMemberUpdatedFilter(member_status_changed=KICKED | LEFT))
+async def user_left_chat(event: types.ChatMemberUpdated):
+    '''
+    If user left chat or have been kicked
+    '''
+    chat_id = event.chat.id
+    user_id = event.from_user.id
+    
+    await Membership.objects.filter(
+        chat__chat_id=chat_id,
+        user__telegram_user_id=user_id
+    ).aupdate(is_active=False)
+    print(f'User {user_id} left chat {chat_id}')

@@ -1,18 +1,24 @@
-from asgiref.sync import sync_to_async
+from django.db.models import Prefetch
 from bot.models import Chat, Membership
 
 async def get_chat_info(chat_data):
-    chat = await Chat.objects.aget(chat_id=chat_data.id)
+    # Get chat and all users active in this chat
+    chat = await Chat.objects.prefetch_related(
+        Prefetch(
+            'membership', # Related name in model Membership for association with users
+            queryset=Membership.objects.filter(is_active=True).select_related('user'),
+            to_attr = 'active_memberships'
+        )
+    ).filter(chat_id=chat_data.id).afirst()
 
-    membership = await sync_to_async(list)(
-        Membership.objects.select_related('user').filter(chat=chat, is_active=True)
-    )
+    if not chat:
+        return None
 
     return {
         'chat': chat,
-        'membership': membership,
+        'membership': chat.active_memberships,
     }
-    
+ 
 def format_chat_message(chat, memberships):
     output = [
         'Current Chat Info\n',

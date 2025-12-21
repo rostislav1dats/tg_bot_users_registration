@@ -1,14 +1,20 @@
-from django.db.models import Count
+from django.db.models import Count, Q
 from bot.models import TelegramUser, Chat
 
 async def get_stats_private_chat():
     total_users= await TelegramUser.objects.acount()
-    total_chats = await Chat.objects.acount()
+    total_chats = await Chat.objects.filter(is_active=True).acount()
     user_with_stats = TelegramUser.objects.annotate(
-        my_chats_count = Count('membership', distinct=True)
+        my_chats_count = Count(
+            'membership',
+            filter=Q(membership__is_active=True, membership__chat__is_active=True),
+            distinct=True)
     )
-    chat_with_stats = Chat.objects.annotate(
-        my_users_count = Count('membership', distinct=True)
+    chat_with_stats = Chat.objects.filter(is_active=True).annotate(
+        my_users_count = Count(
+            'membership',
+            filter=Q(membership__is_active=True),
+            distinct=True)
     )
 
     return {
@@ -18,13 +24,11 @@ async def get_stats_private_chat():
         'chat_with_stats': chat_with_stats
     }
 
-    # return total_users, total_chats, user_with_stats, chat_with_stats
-
 def format_stats_message(total_users, total_chats, user_with_stats, chat_with_stats):
     output = [
-        'Total statistic:'
-        f'Total users: {total_users}'
-        f'Total chats: {total_chats}\n'
+        'Total statistic:\n'
+        f'Total users: {total_users}\n'
+        f'Total chats: {total_chats}\n\n'
     ]
     for user in user_with_stats:
         output.append(f'{user.telegram_user_id} stay in  {user.my_chats_count} chats')

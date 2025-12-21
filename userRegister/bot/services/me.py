@@ -1,4 +1,3 @@
-from asgiref.sync import sync_to_async
 from bot.models import TelegramUser, Membership
 
 async def get_user_profile(telegram_user_id: id):
@@ -7,9 +6,12 @@ async def get_user_profile(telegram_user_id: id):
     except TelegramUser.DoesNotExist:
         return None
 
-    membership = await sync_to_async(list)(
-        Membership.objects.select_related('chat').filter(user=user, is_active=True)
+    membership_qs = Membership.objects.select_related('chat').filter(
+        user=user,
+        is_active = True
     )
+
+    membership = [m async for m in membership_qs]
 
     return {
         'user': user,
