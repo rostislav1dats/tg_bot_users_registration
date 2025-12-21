@@ -43,6 +43,10 @@ PG_PORT=<YOUR_DB_PORT>
 1) python manage.py set_webhooks
 2) uvicorn userRegister.asgi:application --reload
 
+## Up bot in one command
+>> cd userRegister
+>> docker-compose up --build
+
 ## Unit tests
 1) pytest bot/tests/test_start.py (repeats user saving without repeating database entries, but only updating fields)  
 2) pytests bot/tests/test_me.py (checking the operation of the /me command if the user has no chats; if the user has empty first_name and username fields; testing the bot's load)  
