@@ -7,7 +7,7 @@ from asgiref.sync import sync_to_async
 from .services.start import handle_start_chat
 from .services.me import get_user_profile, format_profile_message
 from .services.whereami import get_chat_info, format_chat_message
-from .services.stats import get_stats_private_chat, format_stats_message
+from .services.stats import get_paginated_stats, get_stats_keyboard, StatsPagination
 from .services.seen import format_seen
 from .models import Membership, TelegramUser, Chat
 
@@ -71,18 +71,37 @@ async def whereami_handler(message: Message):
 
 @router.message(Command('stats'))
 async def stats_handler(message: Message):
-    chat_data = message.chat
-    if chat_data.type == 'private':
-        result = await get_stats_private_chat()
-        text = await sync_to_async(format_stats_message)(
-            result.get('total_users'),
-            result.get('total_chats'),
-            result.get('user_with_stats'),
-            result.get('chat_with_stats')
-            )
-        await message.answer(text=text, parse_mode=None)
-    else:
-        await message.answer('I can handle this command only in private chat')
+    total_u = await TelegramUser.objects.acount()
+    total_c = await Chat.objects.filter(is_active=True).acount()
+
+    items_text, total_pages = await get_paginated_stats(1, 'users')
+
+    text = (
+        'General statistic: \n'
+        f'Total users: {total_u}\n'
+        f'Total chats: {total_c}\n'
+        f'\nusers list:\n\n {items_text}'
+    )
+
+    await message.answer(text, reply_markup=get_stats_keyboard(1, total_pages, 'users'), parse_mode=None)
+
+@router.callback_query(StatsPagination.filter())
+async def process_stats_pagination(callback: types.CallbackQuery, callback_data:StatsPagination):
+    items_text, total_pages = await get_paginated_stats(callback_data.page, callback_data.data_type)
+
+    total_u = await TelegramUser.objects.acount()
+    total_c = await Chat.objects.filter(is_active=True).acount()
+
+    # Edit text message
+    text = (
+        'General statistic: \n'
+        f'Total users: {total_u}\n'
+        f'Total chats: {total_c}\n'
+        f'\n{callback_data.data_type} list:\n\n {items_text}'
+    )
+
+    await callback.message.edit_text(text, reply_markup=get_stats_keyboard(callback_data.page, total_pages, callback_data.data_type), parse_mode=None)
+    await callback.answer()
 
 @router.message(Command('seen'))
 async def seen_handler(message: Message, command: CommandObject):
@@ -149,3 +168,10 @@ async def user_left_chat(event: types.ChatMemberUpdated):
         user__telegram_user_id=user_id
     ).aupdate(is_active=False)
     print(f'User {user_id} left chat {chat_id}')
+
+@router.message(F.chat.type == 'private')
+async def echo_all(message: Message):
+    await message.answer(
+        'I don`t quite understang your message.\n'
+        'Please, input /help to see what I can do'
+    )
