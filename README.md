@@ -45,6 +45,7 @@ PG_PORT=<YOUR_DB_PORT>
 
 ## Up bot in one command
 >> cd userRegister
+
 >> docker-compose up --build
 
 ## Unit tests
