@@ -133,6 +133,16 @@ async def seen_handler(message: Message, command: CommandObject):
     text = await sync_to_async(format_seen)(user=user, chats_queryset=chats_queryset)
     await message.answer(text=text, parse_mode=None)
 
+@router.message(Command('forgetme'))
+async def forgetme_handler(message: Message):
+    user = await TelegramUser.objects.filter(telegram_user_id=message.from_user.id).afirst()
+    
+    if not user:
+        await message.answer('U didnt registered in any chat')
+        return
+    await Membership.objects.filter(user=user).aupdate(is_active=False)
+    await message.answer('Success deleted you from our bot')
+
 @router.my_chat_member(ChatMemberUpdatedFilter(member_status_changed=KICKED | LEFT), F.chat.type == 'private')
 async def user_blocked_bot(event: types.ChatMemberUpdated):
     '''
